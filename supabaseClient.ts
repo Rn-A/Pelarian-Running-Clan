@@ -1,16 +1,17 @@
-/// <reference types="vite/client" />
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Menggunakan casting ke 'any' sementara untuk menghindari error TS2339 pada lingkungan build
- * yang tidak memuat global types Vite dengan sempurna.
+ * Kami menggunakan @ts-ignore karena tsc (TypeScript Compiler) terkadang gagal
+ * mengenali environment variables Vite di lingkungan CI/CD seperti Vercel
+ * meskipun types sudah dikonfigurasi.
  */
-const metaEnv = (import.meta as any).env;
 
-const supabaseUrl = metaEnv?.VITE_SUPABASE_URL;
-const supabaseAnonKey = metaEnv?.VITE_SUPABASE_ANON_KEY;
+// @ts-ignore
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+// @ts-ignore
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
-// Gunakan URL dummy yang valid formatnya jika env kosong agar tidak crash saat inisialisasi
+// Fallback jika env tidak ditemukan agar aplikasi tidak crash
 const finalUrl =
   supabaseUrl && supabaseUrl !== "" && !supabaseUrl.includes("placeholder")
     ? supabaseUrl
@@ -25,9 +26,8 @@ const finalKey =
 
 export const supabase = createClient(finalUrl, finalKey);
 
-// Log peringatan hanya di console untuk debugging
 if (finalUrl.includes("placeholder")) {
   console.warn(
-    "Supabase belum terkonfigurasi atau env tidak terbaca. Pastikan variabel VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY sudah diatur di Vercel Dashboard."
+    "PERHATIAN: VITE_SUPABASE_URL tidak terbaca. Pastikan sudah input di Vercel Dashboard > Settings > Environment Variables."
   );
 }
