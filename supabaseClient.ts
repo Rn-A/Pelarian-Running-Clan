@@ -1,33 +1,27 @@
+/// <reference types="vite/client" />
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Kami menggunakan @ts-ignore karena tsc (TypeScript Compiler) terkadang gagal
- * mengenali environment variables Vite di lingkungan CI/CD seperti Vercel
- * meskipun types sudah dikonfigurasi.
+ * Menggunakan casting ke 'any' untuk mematikan pengecekan tipe pada import.meta.env.
+ * Ini adalah solusi paling stabil untuk deployment di Vercel yang menggunakan Vite + TypeScript.
  */
+const env = (import.meta as any).env || {};
 
-// @ts-ignore
-const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
-// @ts-ignore
-const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+// Mengambil URL dari env, jika tidak ada gunakan URL yang Anda berikan sebagai fallback
+const supabaseUrl =
+  env.VITE_SUPABASE_URL || "https://zwbpwcyoljhebvuhblmc.supabase.co";
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || "";
 
-// Fallback jika env tidak ditemukan agar aplikasi tidak crash
-const finalUrl =
-  supabaseUrl && supabaseUrl !== "" && !supabaseUrl.includes("placeholder")
-    ? supabaseUrl
-    : "https://placeholder-project.supabase.co";
-
+// Fallback dummy key agar tidak crash jika env benar-benar kosong saat inisialisasi awal
 const finalKey =
-  supabaseAnonKey &&
-  supabaseAnonKey !== "" &&
-  !supabaseAnonKey.includes("placeholder")
+  supabaseAnonKey && supabaseAnonKey !== ""
     ? supabaseAnonKey
     : "placeholder-key";
 
-export const supabase = createClient(finalUrl, finalKey);
+export const supabase = createClient(supabaseUrl, finalKey);
 
-if (finalUrl.includes("placeholder")) {
+if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
   console.warn(
-    "PERHATIAN: VITE_SUPABASE_URL tidak terbaca. Pastikan sudah input di Vercel Dashboard > Settings > Environment Variables."
+    "PERHATIAN: Variabel lingkungan Supabase tidak terdeteksi. Pastikan VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY sudah diisi di Vercel Dashboard."
   );
 }
